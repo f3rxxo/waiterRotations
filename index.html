@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Juicy-O | Rotación & Reservaciones</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="rotation"><i class="fas fa-arrows-spin"></i> Rotación</button>
+    <button class="tab-btn" data-tab="leaderboard"><i class="fas fa-chart-simple"></i> Mesas por Mesero</button>
+    <button class="tab-btn" data-tab="reservations"><i class="fas fa-calendar-check"></i> Reservaciones</button>
+  </div>
+
+  <!-- ROTATION TAB -->
+  <div id="rotationTab" class="tab-pane active-pane">
+    <div class="card">
+      <h3><i class="fas fa-arrows-spin"></i> Rotación por turnos — <span style="color:#c27e3a;">Juicy-O</span></h3>
+      <div class="rotation-queue">
+        <div><i class="fas fa-check-square"></i> <strong>Meseros que participan en la rotación</strong></div>
+        <div class="server-selector-panel">
+          <div class="server-checkboxes" id="serverCheckboxesContainer"></div>
+          <button id="applyServerSelectionBtn" class="btn-outline"><i class="fas fa-sync-alt"></i> Actualizar rotación</button>
+        </div>
+        <div><i class="fas fa-list-ol"></i> <strong>Orden fijo de rotación</strong></div>
+        <div id="queueContainer" class="queue-list"></div>
+        <div class="selection-hint"><i class="fas fa-mouse-pointer"></i> Haz clic en un mesero para seleccionarlo.</div>
+        <div class="rotation-actions">
+          <button id="seatNextBtn" class="btn-outline"><i class="fas fa-chair"></i> Sentar al siguiente mesero (+ mesa automática)</button>
+          <button id="skipNextBtn" class="btn-outline"><i class="fas fa-forward-step"></i> Saltar turno actual</button>
+          <button id="moveToSelectedBtn" class="btn-outline"><i class="fas fa-arrow-right-to-bracket"></i> Mover turno al seleccionado (-1 mesa)</button>
+        </div>
+        <div class="special-assign">
+          <p><i class="fas fa-hand-sparkles"></i> <strong>Solicitud especial:</strong> asigna una mesa (2 personas) al mesero que elijas.</p>
+          <button id="assignRequestBtn" class="assign-request-btn"><i class="fas fa-concierge-bell"></i> Atender solicitud de mesa</button>
+        </div>
+        <p style="font-size:0.75rem; margin-top:10px;"><i class="fas fa-info-circle"></i> Todos los cambios se sincronizan automáticamente entre dispositivos.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD TAB -->
+  <div id="leaderboardTab" class="tab-pane">
+    <div class="card">
+      <h3><i class="fas fa-trophy"></i> Mesas atendidas por mesero</h3>
+      <p style="font-size: 0.95rem; margin-bottom: 1rem;">Cada cliente sentado suma <strong>1 mesa</strong> al mesero asignado.</p>
+      <div class="waiter-table-wrapper">
+        <table class="waiter-stats-table">
+          <thead><tr><th>Rango</th><th>Mesero</th><th>Mesas Totales</th></tr></thead>
+          <tbody id="waiterTableBody"></tbody>
+        </table>
+      </div>
+      <div style="margin-top: 1.5rem; display: flex; justify-content: center;">
+        <button id="resetAllTablesBtn" class="btn-outline"><i class="fas fa-trash-alt"></i> Resetear todas las mesas a 0</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESERVATIONS TAB -->
+  <div id="reservationsTab" class="tab-pane">
+    <div class="card">
+      <h3><i class="fas fa-pen-alt"></i> Nueva Reservación</h3>
+      <form id="reservationForm">
+        <div class="reservation-form-grid">
+          <input type="text" id="resName" placeholder="Nombre completo" required autocomplete="off">
+          <input type="number" id="resParty" placeholder="Número de personas" min="1" required>
+          <input type="tel" id="resPhone" placeholder="Teléfono / contacto" required>
+          <input type="number" id="resEstimate" placeholder="Tiempo estimado (minutos)" min="0" value="25" required>
+          <div class="datetime-group">
+            <input type="date" id="resDate" value="">
+            <input type="time" id="resTime" value="">
+            <button type="button" id="nowButton" class="btn-outline"><i class="fas fa-clock"></i> Ahora</button>
+          </div>
+          <textarea id="resNotes" placeholder="Notas (opcional)" rows="2" style="grid-column: span 2;"></textarea>
+        </div>
+        <p style="font-size: 0.8rem; background: #fef6e0; display: inline-block; padding: 0.2rem 1rem; border-radius: 40px;"><i class="fas fa-calendar-alt"></i> Selecciona fecha y hora (o usa "Ahora" para reserva inmediata).</p>
+        <button type="submit" style="margin-top: 1rem;"><i class="fas fa-save"></i> Guardar Reservación</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3><i class="fas fa-hourglass-half"></i> Lista de Espera (Hoy)</h3>
+      <div style="overflow-x: auto;" id="currentReservationsContainer">
+        <table class="reservation-table">
+          <thead><tr><th>Cliente</th><th>Personas</th><th>Teléfono</th><th>Registro</th><th>Tiempo espera</th><th>Estimado</th><th>Notas</th><th>Acciones</th></tr></thead>
+          <tbody id="currentReservationsTbody"></tbody>
+        </table>
+      </div>
+
+      <details>
+        <summary><i class="fas fa-calendar-week"></i> Reservaciones Futuras</summary>
+        <div style="overflow-x: auto;">
+          <table class="reservation-table">
+            <thead><tr><th>Cliente</th><th>Personas</th><th>Teléfono</th><th>Fecha/Hora</th><th>Notas</th><th>Acciones</th></tr></thead>
+            <tbody id="futureReservationsTbody"></tbody>
+          </table>
+        </div>
+      </details>
+
+      <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+        <button id="clearAllReservationsBtn" class="btn-outline"><i class="fas fa-trash-alt"></i> Eliminar todas las reservas</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-credit"><i class="fas fa-arrow-rotate-right"></i> Reservaciones: fecha/hora opcional. "Ahora" guarda como reserva inmediata.</div>
+</div>
+
+<!-- Modales -->
+<div id="orderModal" class="modal-overlay"><div class="modal-container"><h4><i class="fas fa-sort-amount-down"></i> Ordenar rotación</h4><p>Arrastra los meseros</p><div id="orderListContainer" class="order-list-container"></div><div class="modal-buttons"><button id="confirmOrderBtn" class="assign-request-btn" style="background:#2c5f2d; color:white;">Confirmar orden</button><button id="cancelOrderBtn" class="cancel-modal">Cancelar</button></div></div></div>
+<div id="startModal" class="modal-overlay"><div class="modal-container"><h4><i class="fas fa-flag-checkered"></i> Iniciar rotación</h4><select id="startModalSelect" class="modal-select"></select><div class="modal-buttons"><button id="confirmStartBtn" class="assign-request-btn" style="background:#2c5f2d; color:white;">Comenzar</button><button id="cancelStartBtn" class="cancel-modal">Cancelar</button></div></div></div>
+<div id="skipOptionsModal" class="modal-overlay"><div class="modal-container"><h4><i class="fas fa-forward-step"></i> Saltar a <span id="skipTargetName"></span></h4><p>¿Qué deseas hacer?</p><div class="modal-buttons"><button id="skipWithoutTableBtn" class="btn-outline">Solo saltar turno</button><button id="skipWithTableBtn" class="assign-request-btn">Saltar y asignar mesa</button><button id="cancelSkipBtn" class="cancel-modal">Cancelar</button></div></div></div>
+<div id="requestModal" class="modal-overlay"><div class="modal-container"><h4><i class="fas fa-user-check"></i> Seleccionar mesero</h4><select id="requestModalSelect" class="modal-select"></select><div class="modal-buttons"><button id="confirmRequestBtn" class="assign-request-btn">Confirmar</button><button id="cancelRequestBtn" class="cancel-modal">Cancelar</button></div></div></div>
+<div id="assignReservationModal" class="modal-overlay"><div class="modal-container"><h4><i class="fas fa-chair"></i> Asignar mesa a mesero</h4><p id="assignReservationInfo">Cliente: --</p><label><strong>Seleccionar mesero (orden de rotación):</strong></label><select id="assignReservationSelect" class="modal-select"></select><div class="modal-buttons"><button id="confirmAssignReservationBtn" class="assign-request-btn"><i class="fas fa-check"></i> Asignar mesa</button><button id="cancelAssignReservationBtn" class="cancel-modal">Cancelar</button></div></div></div>
+
+<div id="toastMsg" class="toast-msg"></div>
+
+<script type="module" src="script.js"></script>
+</body>
+</html>
